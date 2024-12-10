@@ -1,24 +1,31 @@
 # DR sync point start up with Cylc 8.3
 
-## Background
+## The Problem
 
-I need to (re)start my workflow on a DR platform, at a recent sync point.
+I need to be able to (re)start my cycling workflow mid-run on a DR (Disaster
+Recovery) platform. The run directory must contain the right files to allow
+the worklow to start at the chosen point. 
 
-With Cylc 8 you can start a flow anywhere in the graph. There's no need to go back
-to the start of a cycle or back to a workflow database checkpoint (in fact Cylc 8
-doesn't even have DB checkpoints - they're not needed).
+## The Solution
 
-### Sync Points
+With Cylc 8 you can start a flow anywhere in the graph. There's no need to
+refer to a workflow database checkpoint or go back to the start of a cycle.
 
-A "sync point" is a point in the graph where you can successfully trigger a flow
-because critical input data for the tasks at that point have been pre-copied to
-the platform.
+You just have to ensure that the critical data is copied over to allow the
+flow to be started at planned *sync* points in the graph. 
 
 The more sync points, the fewer tasks have to be re-run during DR fail-over.
 
-When a sync point is reached the associated data should be copied to the DR platform,
-and a DB (or similar) updated to say that point is ready to go if needed, along with
-the task IDs that should be triggered to start the flow there.
+A "sync workflow" could watch for marker tasks in your main workflow(s), copy
+the associated data and then update a database to say that the sync point is
+ready if needed, and the IDs of tasks to trigger to start the flow there.
+
+(Note if data volumes are large and/or latency is significant it may not be
+possible to rely on low-level global disk-sync to stay up to date with the
+workflow states. Deliberate workflow-driven data copy guarantees that the
+right data will be present on disk at designated sync points in the graph.) 
+
+### Sync Points
 
 The ideal sync point is a bottleneck in the graph:
 ```console
@@ -27,7 +34,7 @@ a & b => c => d & e  # sync point c
 # If needed, trigger the flow on the DR platform at c.
 ```
 
-If the graph has multiple concurrent streams, sync points can be spread out:
+If bottlenecks aren't available sync points can be spread over the graph:
 ```console
 a => b => c
 x => y => z  # sync point (b, y)
@@ -35,33 +42,66 @@ x => y => z  # sync point (b, y)
 # If needed, trigger the flow on the DR platform at b and y.
 ```
 
-Or you could have independent sync points on the different graph streams, if your
-DR start-up logic can handle that:
+With appropriate start-up logic, you could even have independent sync points on
+different graph paths:
 ```console
-a => b => c  # sync points a, c
-x => y => z  # sync points x, z
+a => b => c  # graph path 1: sync points a, c
+x => y => z  # graph path 2: sync points x, z
+# If needed, trigger the flow at the most recent sync point on each path.
 ```
 
-### Points to note
+### Things to watch out for
 
-Choose sync points where it's easy to trigger a flow that traverses the entire
-graph downstream.
+Choose sync points with an understanding of the graph.
 
-This may require some care in a cycling graph with inter-cycle dependence and
-some parentless tasks that must automatically spawn to the top of subsequent cycles.
+#### Off-flow prerequisites
 
-To make this easier, start the flow with `cylc play --start-task` (with multiple start
-tasks if necessary) and Cylc will automatically ignore any dependence on cycle points
-prior to the first start-task. Note that this "pre-initial ignore" feature is global.
-If you have multiple graph streams with different cycling intervals, or if you trigger
-the flow manually with `cylc trigger` instead of with start-tasks, you may need to
-use `cylc set` to set off-flow prerequisites or the upstream outputs that satisfy them,
-to avoid stalling the workflow.
+Off-flow prerequisites reflect dependence on tasks that are not downstream of
+the trigger point(s) - usually dependence on tasks in the previous cycle.
+They have to be artificially satisfied to avoid stalling the workflow.
+
+If you start the flow with `cylc play --start-task=ID1 --start-task=ID2 ...`
+any dependence on cycle points prior to the first start-task will be ignored
+automatically.
+
+However this "pre-initial ignore" feature picks a single cycle point. If you
+have multiple graph streams with different cycling intervals you may still need
+to use `cylc set` to satisfy some off-flow prerequisites (or to complete the
+upstream outputs that satisfy them) to avoid stalling the workflow.
+
+Or, if you trigger the flow manually after start-up with `cylc trigger` instead
+of using start tasks, you will need to use `cylc set` for all off-flow
+prerequisites. (*Group trigger - coming in Cylc 8.5 - will make this easier.*)
 
 
-## The example
+#### Parentless tasks
 
-**N.B. this example is non-trivial but does not require any manual use of `cylc set`**
+Cycling workflows typically have clock-triggered or xtriggered parentless tasks
+at the top of each cycle. These don't have parents to spawn them in the flow,
+so the scheduler spawns them automatically into future cycle points.
+
+If a sync point is at the start of a cycle if may be sufficient to simply
+trigger the parentless task(s) to get the flow going. Otherwise you'll need to
+include next-cycle parentless tasks as start-tasks to avoid a stall there
+(once started they will spawn forward automatically).
+
+If not included as start-tasks use `cylc set --pre=all` to spawn parentless
+tasks into the active window and start checking their clock and xtriggers.
+
+#### Dependence on initial prep tasks
+
+If your workflow graph begins with tasks that prep the workspace and (e.g.)
+build or deploy code for the other tasks, you may need to run these again
+before starting the flow at the sync point.
+
+To do this:
+ 1. start the workflow paused
+ 2. hold the waiting start-tasks, then resume (unpause) the workflow
+ 3. manually trigger the initial prep tasks, and wait for them to finish
+ 4. release (unhold) the start tasks
+
+## An example
+
 **TODO: expand to several examples, both simpler and more difficult.**
 
 Sync point (see `cgraph.png` with cycle point 2 -> 3):
