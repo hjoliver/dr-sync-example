@@ -2,17 +2,17 @@
 
 ## The Problem
 
-I need to be able to (re)start my cycling workflow mid-run on a DR (Disaster
-Recovery) platform. The run directory must contain the right files to allow
-the worklow to start at the chosen point. 
+I need to be able to (re)start my cycling workflow mid-run on a remote Disaster
+Recovery (DR) platform. The run directory must contain the right files to allow
+the worklow to start at the chosen point.
 
 ## The Solution
 
 With Cylc 8 you can start a flow anywhere in the graph. There's no need to
 refer to a workflow database checkpoint or go back to the start of a cycle.
 
-You just have to ensure that the critical data is copied over to allow the
-flow to be started at planned *sync* points in the graph. 
+You just have to ensure that the critical data is present on disk to allow
+the flow to be started at planned sync points in the graph. 
 
 The more sync points, the fewer tasks have to be re-run during DR fail-over.
 
