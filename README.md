@@ -116,7 +116,7 @@ NOTE: note `cylc play --start-task` uses pre-initial ignore on intercycle depend
 $ cylc vip --pause ecx -t //3/a -t //3/x -t //4/data
 ```
 
-2. unpause the workflow after holding the start tasks
+2. resume the workflow after holding the start tasks
 ```console
 $ cylc hold 'ecx//*'
 $ cylc play ecx
@@ -127,7 +127,7 @@ $ cylc play ecx
 $ cylc trigger --flow=none ecx//1/prep
 ```
 
-4. unhold the waiting start tasks, to start the flow
+4. release the waiting start tasks, to start the flow
 
 ```console
 $ cylc release "ecx//*"
