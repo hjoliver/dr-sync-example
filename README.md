@@ -80,7 +80,7 @@ Cycling workflows typically have clock-triggered or xtriggered parentless tasks
 at the top of each cycle. These don't have parents to spawn them in the flow,
 so the scheduler spawns them automatically into future cycle points.
 
-If a sync point is at the start of a cycle if may be sufficient to simply
+If a sync point is at the start of a cycle it may be sufficient to simply
 trigger the parentless task(s) to get the flow going. Otherwise you'll need to
 include next-cycle parentless tasks as start-tasks to avoid a stall there
 (once started they will spawn forward automatically).
@@ -109,6 +109,11 @@ after pre-hold follow-on tasks to block flow-on beyond the prep tasks
 
 ## An example
 
+This example shows how to start a workflow at an arbitrary sync point,
+illustrating the issues discussed above (we assume sync point data has
+been copied in first).
+
+that the right data has 
 **TODO: expand to several examples, both simpler and more difficult.**
 
 Sync point (see `cgraph.png` with cycle point 2 -> 3):
