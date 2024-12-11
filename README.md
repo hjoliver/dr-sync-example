@@ -97,7 +97,8 @@ before starting the flow at the sync point.
 To do this:
  1. start the workflow paused
  2. hold the waiting start-tasks, then resume (unpause) the workflow
- 3. manually trigger the initial prep tasks, and wait for them to finish
+ 3. manually trigger the initial prep tasks with `--flow=none` to avoid
+    flow-on, and wait for them to finish
  4. release (unhold) the start tasks
 
 ## An example
