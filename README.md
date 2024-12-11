@@ -101,6 +101,12 @@ To do this:
     flow-on, and wait for them to finish
  4. release (unhold) the start tasks
 
+If you have a sub-graph of prep tasks with internal dependencies, group
+trigger (8.5) will make that easier. For now, trigger them manually in the
+right order with `--flow=none`, or trigger a new flow to traverse them
+after pre-hold follow-on tasks to block flow-on beyond the prep tasks
+(remove the held blocking tasks when prep is done).
+
 ## An example
 
 **TODO: expand to several examples, both simpler and more difficult.**
