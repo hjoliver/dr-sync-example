@@ -39,6 +39,7 @@ a & b => c => d & e  # sync point c
 # When c starts running, copy its input data update the DB.
 # If needed, trigger the flow on the DR platform at c.
 ```
+![sync point 1](examples/sync-pt-1/sync-pt-1.png)
 
 If bottlenecks aren't available sync points can be spread over the graph:
 ```console
@@ -115,7 +116,7 @@ after pre-hold follow-on tasks to block flow-on beyond the prep tasks
 
 ## An example
 
-![example](img/cgraph.png)
+![example](src/cgraph.png)
 
 This example shows how to start a workflow at an arbitrary sync point,
 illustrating the issues discussed above (we assume sync point data has
