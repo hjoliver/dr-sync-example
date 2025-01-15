@@ -109,6 +109,8 @@ after pre-hold follow-on tasks to block flow-on beyond the prep tasks
 
 ## An example
 
+![example](img/cgraph.png)
+
 This example shows how to start a workflow at an arbitrary sync point,
 illustrating the issues discussed above (we assume sync point data has
 been copied in first).
