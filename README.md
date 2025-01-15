@@ -1,29 +1,35 @@
-# DR sync point start up with Cylc 8.3
+# Workflow-driven DR fail-over with Cylc 8.4
 
 ## The Problem
 
-I need to be able to (re)start my cycling workflow mid-run on a remote Disaster
-Recovery (DR) platform. The run directory must contain the right files to allow
-the worklow to start at the chosen point.
+I need to (re)start my cycling workflows mid-run on a remote Disaster Recovery
+(DR) platform. I want to rewind as little as possible, to return to timely
+production quickly.
 
 ## The Solution
 
-With Cylc 8 you can start a flow anywhere in the graph. There's no need to
-refer to a workflow database checkpoint or go back to the start of a cycle.
+With Cylc 8 we can start a flow anywhere in the graph. There's no need to
+"warm start" from the beginning of a previous cycle, and no need to sync the
+workflow database for restart from a workflow checkpoint. We just have to
+ensure that the data on disk is compatible with the workflow start point.
 
-You just have to ensure that the critical data is present on disk to allow
-the flow to be started at planned sync points in the graph. 
+So, we can:
+- choose any number of convenient sync points in the graph
+- when a sync point is reached, transfer critical data to the DR site
+- then update a DB to say that this sync point is ready for start-up if needed
 
-The more sync points, the fewer tasks have to be re-run during DR fail-over.
+The more sync points, the less re-running of tasks after fail-over. With the
+right sync points you can get back to timely product generation very quickly.
 
-A "sync workflow" could watch for marker tasks in your main workflow(s), copy
-the associated data and then update a database to say that the sync point is
-ready if needed, and the IDs of tasks to trigger to start the flow there.
+*Note: if data volumes are large and/or latency is significant it may not be
+possible to rely on workflow-independent low-level disk-sync (or similar) to
+keep up with workflow states. Workflow-driven data transfer guarantees that
+the right data will be present on disk at recent sync points.*
 
-(Note if data volumes are large and/or latency is significant it may not be
-possible to rely on low-level global disk-sync to stay up to date with the
-workflow states. Deliberate workflow-driven data copy guarantees that the
-right data will be present on disk at designated sync points in the graph.) 
+This could be done by adding sync tasks into your main workflows, or (better)
+with a separate "sync workflow" that triggers off of the main workflows. The
+sync workflow could even be generated automatically from a list of main
+workflows and their sync point tasks.
 
 ### Sync Points
 
