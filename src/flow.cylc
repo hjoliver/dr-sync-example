@@ -2,10 +2,10 @@
    cycling mode = integer
    [[graph]]
       R1 = """
-         prep => data
+         prep1 => prep2 => prep3 => data
       """
       P1 = """
-         prep[^] => data
+         prep3[^] => data
          data => a & x
          a => b & c
          x => y & z
@@ -15,6 +15,6 @@
 [runtime]
    [[root]]
       script = sleep 10
-   [[prep, data]]
+   [[prep1, prep2, prep3, data]]
    [[a, b, c]]
    [[x, y, z]]
